@@ -7,14 +7,14 @@
 
 #include "plan.hpp"
 
-oclFFTPlan::oclFFTPlan(uint32_t x) {
+oclFFTPlan1D::oclFFTPlan1D(uint32_t x) {
 	FFT_BATCH = 1;
 	FFT_LEN = (int32_t)(x);
 	FFT_ChirpZ = -1;
 	Calc_Counts();
 }
 
-void oclFFTPlan::Calc_Counts() {
+void oclFFTPlan1D::Calc_Counts() {
 	bool flag;
 	int32_t K_W = FFT_LEN;
 	for (int idx = 0; idx < 6; idx++) {
@@ -37,30 +37,30 @@ void oclFFTPlan::Calc_Counts() {
 	FFT_ChirpZ = K_W;
 }
 
-void oclFFTPlan::Set_KW(uint32_t K_W) {
+void oclFFTPlan1D::Set_KW(uint32_t K_W) {
 	FFT_LEN = K_W;
 	Calc_Counts();
 }
 
-void oclFFTPlan::Set_Batch(uint32_t x) {
+void oclFFTPlan1D::Set_Batch(uint32_t x) {
 	FFT_BATCH = x;
 }
 
-int32_t oclFFTPlan::Get_FFT_Type(int32_t idx) {
+int32_t oclFFTPlan1D::Get_FFT_Type(int32_t idx) {
 	if ((idx > 5) || (idx < 0)) {
 		return 0;
 	}
 	return FFT_TYPES[idx];
 }
 
-uint32_t oclFFTPlan::Get_Count(int32_t idx) {
+uint32_t oclFFTPlan1D::Get_Count(int32_t idx) {
 	if ((idx > 5) || (idx < 0)) {
 		return 0;
 	}
 	return NCounts[idx];
 }
 
-uint32_t oclFFTPlan::Get_Next_K_W(int32_t idx) {
+uint32_t oclFFTPlan1D::Get_Next_K_W(int32_t idx) {
 	if ((idx > 5) || (idx < 0)) {
 		return 0;
 	}

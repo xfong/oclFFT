@@ -4,7 +4,7 @@
 #include <cstring>
 #include <cstdint>
 
-class oclFFTPlan {
+class oclFFTPlan1D {
 	private:
 		int32_t FFT_LEN, FFT_BATCH, FFT_ChirpZ;
 		uint32_t FFT_TYPES[6] = { 8, 7, 5, 4, 3, 2 };
@@ -12,7 +12,7 @@ class oclFFTPlan {
 		uint32_t NCounts[6] = { 0, 0, 0, 0, 0, 0 };
 		void Calc_Counts();
 	public:
-		oclFFTPlan(uint32_t);
+		oclFFTPlan1D(uint32_t);
 		void Set_KW (uint32_t);
 		void Set_Batch (uint32_t);
 		uint32_t Get_Len() { return FFT_LEN; };
