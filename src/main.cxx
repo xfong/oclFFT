@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <iostream>
 
-#include "plan.hpp"
+#include "plan.h"
 
 using namespace std;
 

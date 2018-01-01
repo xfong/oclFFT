@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <iostream>
 
-#include "plan.hpp"
+#include "plan.h"
 
 oclFFTPlan1D::oclFFTPlan1D(uint32_t x) {
 	FFT_BATCH = 1;
