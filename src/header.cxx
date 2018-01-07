@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdint>
 #include <iostream>
+#include <ctime>
 
 #include "header.h"
 
@@ -641,4 +642,19 @@ void oclFFTHeader::GenFFT8Macros() {
 	def_8rev += "in6 = fft_diff(v4, v5);\\\n\tin7 = fft_diff(v6, v7);\\\n}\n";
 }
 
+void oclFFTHeader::initKernelNameGenerator() {
+	srand(time(0));
+}
 
+std::string oclFFTHeader::genKernelName(uint32_t nLen) {
+	static const char alphaNum[] = "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ";
+	int stringLength = sizeof(alphaNum) - 1;
+	std::string tmp = "";
+	if (!nameGenInit) {
+		initKernelNameGenerator();
+	}
+	for (uint32_t idx = 0; idx < nLen; idx++) {
+		tmp += alphaNum[rand() % stringLength];
+	}
+	return tmp;
+}

@@ -2,12 +2,14 @@
 #include <string>
 #include <cstdint>
 #include <iostream>
+#include <ctime>
 
 #include "header.h"
 
 #define LOCAL_GRP_SZ 256
 
 int main() {
+	srand(time(0));
 	oclFFTHeader printer;
 	std::string tmp;
 	uint32_t local_fft_len = 7;
@@ -30,7 +32,8 @@ int main() {
 	tmp = printer.ReturnCommonMacros();
 	tmp += printer.GetSourceHeader();
 	tmp += printer.ReturnMacro();
-	tmp.append(printer.print_kernel_name("phase1"));
+	std::string kern_name = printer.genKernelName(25);
+	tmp.append(printer.print_kernel_name(kern_name));
 	tmp.append(printer.print_kernel_float2_inputs());
 	tmp.append(" {\n");
 	tmp.append(printer.print_kernel_initialization());

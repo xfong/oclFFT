@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdint>
 #include <iostream>
+#include <ctime>
 
 class oclFFTHeader {
 	private:
@@ -47,6 +48,7 @@ class oclFFTHeader {
 		bool full_fft_length_set = false;
 		uint32_t kernel_fft_length;
 		bool kernel_fft_length_set = false;
+		bool nameGenInit = false;
 		int mat_inverse_sCount;
 		int final_mat_inverse_sCount;
 		int twiddle_sCount;
@@ -84,9 +86,11 @@ class oclFFTHeader {
 		void GenFFT5Macros();
 		void GenFFT7Macros();
 		void GenFFT8Macros();
+		void initKernelNameGenerator();
 		
 	public:
 		oclFFTHeader();
+		std::string genKernelName(uint32_t nLen);
 		std::string print_kernel_input_vector_type(bool isfloat, uint32_t vlen, std::string vName);
 		std::string print_kernel_name(std::string kName);
 		std::string print_kernel_float2_inputs();
