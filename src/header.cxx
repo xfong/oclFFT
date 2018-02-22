@@ -46,11 +46,11 @@ oclFFTHeader::oclFFTHeader() {
 void oclFFTHeader::SetTwiddleMacro() {
 	def_twiddle_macro = "#define twiddle_factor(k, angle, in) {\\\n\t";
 	if (isfloat) {
-		def_twiddle_macro += "float2 tw, v;\\\n\ttw.x = native_cos((float)k*angle);\\\n\ttw.y = native_sin((float)k*angle);\\\n\t";
+		def_twiddle_macro += "float2 tw, v;\\\n\ttw.x = cos((float)k*angle);\\\n\ttw.y = sin((float)k*angle);\\\n\t";
 	} else {
-		def_twiddle_macro += "double2 tw, v;\\\n\ttw.x = native_cos((double)k*angle);\\\n\ttw.y = native_sin((double)k*angle);\\\n\t";
+		def_twiddle_macro += "double2 tw, v;\\\n\ttw.x = cos((double)k*angle);\\\n\ttw.y = sin((double)k*angle);\\\n\t";
 	}
-	def_twiddle_macro += "v.x = tw.x * in.x;\\\n\tv.x -= tw.y * in.y;\\\n\tv.y = tw.x * in.y;\\\n\tv.y += tw.y * in.x;\\\n\tin = v;\\\n}\n\n";
+	def_twiddle_macro += "v.x = fma(tw.x, in.x, 0.0f);\\\n\tv.x = fma(-1.0f * tw.y, in.y, v.x);\\\n\tv.y = fma(tw.x, in.y, 0.0f);\\\n\tv.y = fma(tw.y, in.x, v.y);\\\n\tin = v;\\\n}\n\n";
 }
 
 void oclFFTHeader::SetPrecision(bool x) {
@@ -78,14 +78,17 @@ void oclFFTHeader::SetFFTSumFunction() {
 		precision_string = "double";
 	}
 	def_fft_sum_function = "inline " + precision_string + "2 fft_sum(" + precision_string + "2 a, " + precision_string + "2 b) {\n\t";
-	def_fft_sum_function += precision_string + "2 s = a + b;\n\t";
-	def_fft_sum_function += precision_string + "2 bv = s - a;\n\t";
-	def_fft_sum_function += precision_string + "2 av = s - bv;\n\t";
-	def_fft_sum_function += precision_string + "2 x = av - a;\n\t";
-	def_fft_sum_function += "bv = s - av;\n\t";
-	def_fft_sum_function += precision_string + "2 y = bv - b;\n\t";
-	def_fft_sum_function += "y += x;\n\t";
-	def_fft_sum_function += "s -= y;\n\t";
+	def_fft_sum_function += precision_string + "2 s;\n\t";
+	def_fft_sum_function += "if (fabs(a.x) > fabs(b.x)) {\n\t\t";
+	def_fft_sum_function += "s.x = fma(1.0f, a.x, b.x);\n\t";
+	def_fft_sum_function += "} else {\n\t\t";
+	def_fft_sum_function += "s.x = fma(1.0f, b.x, a.x);\n\t";
+	def_fft_sum_function += "}\n\t";
+	def_fft_sum_function += "if (fabs(a.y) > fabs(b.y)) {\n\t\t";
+	def_fft_sum_function += "s.y = fma(1.0f, a.y, b.y);\n\t";
+	def_fft_sum_function += "} else {\n\t\t";
+	def_fft_sum_function += "s.y = fma(1.0f, b.y, a.y);\n\t";
+	def_fft_sum_function += "}\n\t";
 	def_fft_sum_function += "return s;\n";
 	def_fft_sum_function += "}\n\n";
 }
@@ -98,14 +101,12 @@ void oclFFTHeader::SetTwoSumFunction() {
 		precision_string = "double";
 	}
 	def_two_sum_function = "inline " + precision_string + " two_sum(" + precision_string + " a, " + precision_string + " b) {\n\t";
-	def_two_sum_function += precision_string + " s = a + b;\n\t";
-	def_two_sum_function += precision_string + " bv = s - a;\n\t";
-	def_two_sum_function += precision_string + " av = s - bv;\n\t";
-	def_two_sum_function += precision_string + " x = av - a;\n\t";
-	def_two_sum_function += "bv = s - av;\n\t";
-	def_two_sum_function += precision_string + " y = bv - b;\n\t";
-	def_two_sum_function += "y += x;\n\t";
-	def_two_sum_function += "s -= y;\n\t";
+	def_two_sum_function += precision_string + " s;\n";
+	def_two_sum_function += "if (fabs(a) > fabs(b)) {\n\t\t";
+	def_two_sum_function += "s = fma(1.0f, a, b);\n\t";
+	def_two_sum_function += "} else {\n\t\t";
+	def_two_sum_function += "s = fma(1.0f, b, a);\n\t";
+	def_two_sum_function += "}\n\t";
 	def_two_sum_function += "return s;\n";
 	def_two_sum_function += "}\n\n";
 }
@@ -118,14 +119,17 @@ void oclFFTHeader::SetFFTDiffFunction() {
 		precision_string = "double";
 	}
 	def_fft_diff_function = "inline " + precision_string + "2 fft_diff(" + precision_string + "2 a, " + precision_string + "2 b) {\n\t";
-	def_fft_diff_function += precision_string + "2 s = a - b;\n\t";
-	def_fft_diff_function += precision_string + "2 bv = s - a;\n\t";
-	def_fft_diff_function += precision_string + "2 av = s - bv;\n\t";
-	def_fft_diff_function += precision_string + "2 x = av - a;\n\t";
-	def_fft_diff_function += "bv = av - s;\n\t";
-	def_fft_diff_function += precision_string + "2 y = bv - b;\n\t";
-	def_fft_diff_function += "y += x;\n\t";
-	def_fft_diff_function += "s -= y;\n\t";
+	def_fft_diff_function += precision_string + "2 s;\n\t";
+	def_fft_diff_function += "if (fabs(a.x) > fabs(b.x)) {\n\t\t";
+	def_fft_diff_function += "s.x = fma(1.0f, a.x, -1.0f * b.x);\n\t";
+	def_fft_diff_function += "} else {\n\t\t";
+	def_fft_diff_function += "s.x = fma(-1.0f, b.x, a.x);\n\t";
+	def_fft_diff_function += "}\n\t";
+	def_fft_diff_function += "if (fabs(a.y) > fabs(b.y)) {\n\t\t";
+	def_fft_diff_function += "s.y = fma(1.0f, a.y, -1.0f * b.y);\n\t";
+	def_fft_diff_function += "} else {\n\t\t";
+	def_fft_diff_function += "s.y = fma(-1.0f, b.y, a.y);\n\t";
+	def_fft_diff_function += "}\n\t";
 	def_fft_diff_function += "return s;\n";
 	def_fft_diff_function += "}\n\n";
 }
@@ -138,14 +142,12 @@ void oclFFTHeader::SetTwoDiffFunction() {
 		precision_string = "double";
 	}
 	def_two_diff_function = "inline " + precision_string + " two_diff(" + precision_string + " a, " + precision_string + " b) {\n\t";
-	def_two_diff_function += precision_string + " s = a - b;\n\t";
-	def_two_diff_function += precision_string + " bv = s - a;\n\t";
-	def_two_diff_function += precision_string + " av = s - bv;\n\t";
-	def_two_diff_function += precision_string + " x = av - a;\n\t";
-	def_two_diff_function += "bv = av - s;\n\t";
-	def_two_diff_function += precision_string + " y = bv - b;\n\t";
-	def_two_diff_function += "y += x;\n\t";
-	def_two_diff_function += "s -= y;\n\t";
+	def_two_diff_function += precision_string + " s;\n\t";
+	def_two_diff_function += "if (fabs(a) > fabs(b)) {\n\t\t";
+	def_two_diff_function += "s = fma(1.0f, a, -1.0f * b);\n\t";
+	def_two_diff_function += "} else {\n\t\t";
+	def_two_diff_function += "s = fma(-1.0f, b, a);\n\t";
+	def_two_diff_function += "}\n\t";
 	def_two_diff_function += "return s;\n";
 	def_two_diff_function += "}\n\n";
 }
@@ -287,7 +289,7 @@ std::string oclFFTHeader::print_kernel_inner_loop() {
 	tmp += "\n" + print_fft_macro();
 	tmp += print_matrix_inverse_logic();
 	tmp += "\n\t\t\tidx += " + std::to_string(global_grp_size) + ";\n";
-	tmp += "\t\t\tangle_ *= " + std::to_string(kernel_fft_length) + ".0f;\n\t\t}";
+	tmp += "\t\t\tangle_ = fma(" + std::to_string(kernel_fft_length) + ".0f, angle_, 0.0f);\n\t\t}";
 	return tmp;
 }
 
@@ -322,7 +324,7 @@ std::string oclFFTHeader::print_kernel_internal_twiddle_mult() {
 	std::string tmp = "\t\t\t// Performing twiddle factor multiplication before FFT\n";
 	tmp += "\t\t\tif (sCount > ";
 	tmp.append(std::to_string(twiddle_sCount) + ") {\n");
-	tmp.append("\t\t\t\tfloat angle = angle_ * (float)(lti);\n");
+	tmp.append("\t\t\t\tfloat angle = fma(angle_, (float)(lti), 0.0f);\n");
 	for (uint32_t idx = 1; idx < kernel_fft_length; idx++) {
 		tmp.append("\t\t\t\ttwiddle_factor(" + std::to_string(idx) + ", angle, in" + std::to_string(idx) + ");\n");
 	}
@@ -346,9 +348,9 @@ std::string oclFFTHeader::print_shift_input_to_registers() {
 
 std::string oclFFTHeader::print_scale_input_registers() {
 	std::string tmp = "";
-	std::string tmp1 = "M_SCALE_1_" + std::to_string(kernel_fft_length) + "F;\n";
+	std::string tmp1 = "M_SCALE_1_" + std::to_string(kernel_fft_length) + "F";
 	for (uint32_t idx = 0; idx < kernel_fft_length; idx++) {
-		tmp.append("\t\t\tin" + std::to_string(idx) + " *= " + tmp1);
+		tmp.append("\t\t\tin" + std::to_string(idx) + " = fma(" + tmp1 + ", in" + std::to_string(idx) + ", 0.0f);\n");
 	}
 	return tmp;
 }
@@ -542,13 +544,13 @@ void oclFFTHeader::GenFFT2Macros() {
 
 void oclFFTHeader::GenFFT3Macros() {
 	def_3for = "#define FFT3(in0, in1, in2) {\\\n\tv0 = in0;\\\n\tv1 = fft_sum(in1, in2);\\\n\tin0 = fft_sum(in0, v1);\\\n\t";
-	def_3for += "v1 *= M_SCALE_1_2F;\\\n\tv2 = fft_diff(in2, in1);\\\n\tv3 = fft_diff(in1, in2);\\\n\t";
-	def_3for += "in1 = fft_diff(v0, v1);\\\n\tin2 = in1;\\\n\tv3.x = v3.y;\\\n\tv3.y = v2.x;\\\n\tv3 *= M_SCALE_1_2F;\\";
-	def_3for += "\n\tv3 *= M_SQRT_3F;\\\n\tv2 = in1;\\\n\tin1 = fft_sum(v2, v3);\\\n\tin2 = fft_diff(v2, v3);\\\n}\n";
+	def_3for += "v1 = fma(M_SCALE_1_2F, v1, 0.0f);\\\n\tv2 = fft_diff(in2, in1);\\\n\tv3 = fft_diff(in1, in2);\\\n\t";
+	def_3for += "in1 = fft_diff(v0, v1);\\\n\tin2 = in1;\\\n\tv3.x = v3.y;\\\n\tv3.y = v2.x;\\\n\tv3 = fma(M_SCALE_1_2F, v3, 0.0f);\\";
+	def_3for += "\n\tv3 = fma(M_SQRT_3F, v3, 0.0f);\\\n\tv2 = in1;\\\n\tin1 = fft_sum(v2, v3);\\\n\tin2 = fft_diff(v2, v3);\\\n}\n";
 
-	def_3rev = "#define IFFT3(in0, in1, in2) {\\\n\tv0 = in0;\\\n\tv1 = fft_sum(in1, in2);\\\n\tin0 = fft_sum(in0, v1);\\\n\tv1 *= M_SCALE_1_2F;\\";
+	def_3rev = "#define IFFT3(in0, in1, in2) {\\\n\tv0 = in0;\\\n\tv1 = fft_sum(in1, in2);\\\n\tin0 = fft_sum(in0, v1);\\\n\tv1 = fma(M_SCALE_1_2F, v1, 0.0f);\\";
 	def_3rev += "\n\tv2 = fft_diff(in2, in1);\\\n\tv3 = fft_diff(in1, in2);\\\n\tin1 = fft_diff(v0, v1);\\\n\tin2 = in1;\\\n\tv3.x = v3.y;\\";
-	def_3rev += "\n\tv3.y = v2.x;\\\n\tv3 *= M_SCALE_1_2F;\\\n\tv3 *= M_SQRT_3F;\\\n\tv2 = in1;\\\n\tin1 = fft_diff(v2, v3);\\\n\tin2 = fft_sum(v2, v3);\\\n}\n";
+	def_3rev += "\n\tv3.y = v2.x;\\\n\tv3 = fma(M_SCALE_1_2F, v3, 0.0f);\\\n\tv3 = fma(M_SQRT_3F, v3, 0.0f);\\\n\tv2 = in1;\\\n\tin1 = fft_diff(v2, v3);\\\n\tin2 = fft_sum(v2, v3);\\\n}\n";
 }
 
 void oclFFTHeader::GenFFT4Macros() {
@@ -564,18 +566,18 @@ void oclFFTHeader::GenFFT4Macros() {
 void oclFFTHeader::GenFFT5Macros() {
 	def_5for = "#define FFT5(in0, in1, in2, in3, in4) {\\\n\tv0 = in0;\\\n\tv1 = fft_sum(in1, in4);\\\n\t";
 	def_5for += "v2 = fft_sum(in2, in3);\\\n\tv3 = fft_sum(v1, v2);\\\n\tin0 = fft_sum(v0, v3);\\\n\tv3 = fft_diff(in1, in4);\\\n\tv4 = fft_diff(in2, in3);\\\n\t";
-	def_5for += "in1 = M_COS_2PI_5F*v1;\\\n\tin2 = M_COS_4PI_5F*v1;\\\n\tin3 = M_COS_2PI_5F*v2;\\\n\tin4 = M_COS_4PI_5F*v2;\\\n\tv1 = fft_sum(in1, in4);\\\n\t";
-	def_5for += "v2 = fft_sum(in2, in3);\\\n\tin1 = M_SIN_2PI_5F*v3;\\\n\tin2 = M_SIN_4PI_5F*v3;\\\n\tin3 = M_SIN_2PI_5F*v4;\\\n\tin4 = M_SIN_4PI_5F*v4;\\\n\t";
+	def_5for += "in1 = fma(M_COS_2PI_5F, v1, 0.0f);\\\n\tin2 = fma(M_COS_4PI_5F, v1, 0.0f);\\\n\tin3 = fma(M_COS_2PI_5F, v2, 0.0f);\\\n\tin4 = fma(M_COS_4PI_5F, v2, 0.0f);\\\n\tv1 = fft_sum(in1, in4);\\\n\t";
+	def_5for += "v2 = fft_sum(in2, in3);\\\n\tin1 = fma(M_SIN_2PI_5F, v3, 0.0f);\\\n\tin2 = fma(M_SIN_4PI_5F, v3, 0.0f);\\\n\tin3 = fma(M_SIN_2PI_5F, v4, 0.0f);\\\n\tin4 = fma(M_SIN_4PI_5F, v4, 0.0f);\\\n\t";
 	def_5for += "v3 = fft_sum(in1, in4);\\\n\tv4 = fft_diff(in2, in3);\\\n\tv5.x = v4.y;\\\n\tv5.y = -1.0f * v4.x;\\\n\tv6.x = v3.y;\\\n\t";
-	def_5for += "v6.y = -1.0f * v3.x;\\\n\tin1 = fft_sum(v0, v1);\\\n\tin2 = fft_sum(v0, v2);\\\n\tv1 = in1;\\\n\tv2 = in2;\\\n\t";
+	def_5for += "v6.y = fma(-1.0f, v3.x, 0.0f);\\\n\tin1 = fft_sum(v0, v1);\\\n\tin2 = fft_sum(v0, v2);\\\n\tv1 = in1;\\\n\tv2 = in2;\\\n\t";
 	def_5for += "in1 = fft_sum(v1, v6);\\\n\tin2 = fft_sum(v2, v5);\\\n\tin3 = fft_diff(v2, v5);\\\n\tin4 = fft_diff(v1, v6);\\\n}\n";
 
 	def_5rev = "#define IFFT5(in0, in1, in2, in3, in4) {\\\n\tv0 = in0;\\\n\tv1 = fft_sum(in1, in4);\\\n\tv2 = fft_sum(in2, in3);\\\n\t";
 	def_5rev += "v3 = fft_sum(v1, v2);\\\n\tin0 = fft_sum(v0, v3);\\\n\tv3 = fft_diff(in1, in4);\\\n\tv4 = fft_diff(in2, in3);\\\n\t";
-	def_5rev += "in1 = M_COS_2PI_5F*v1;\\\n\tin2 = M_COS_4PI_5F*v1;\\\n\tin3 = M_COS_2PI_5*v2;\\\n\tin4 = M_COS_4PI_5F*v2;\\\n\t";
-	def_5rev += "v1 = fft_sum(in1, in4);\\\n\tv2 = fft_sum(in2, in3);\\\n\tin1 = M_SIN_2PI_5F*v3;\\\n\tin2 = M_SIN_4PI_5F*v3;\\\n\t";
-	def_5rev += "in3 = M_SIN_2PI_5F*v4;\\\n\tin4 = M_SIN_4PI_5F*v4;\\\n\tv3 = fft_sum(in1, in4);\\\n\tv4 = fft_diff(in2, in3);\\\n\t";
-	def_5rev += "v5.x = -1.0f * v4.y;\\\n\tv5.y = v4.x;\\\n\tv6.x = -1.0f * v3.y;\\\n\tv6.y = v3.x;\\\n\tin1 = fft_sum(v0, v1);\\\n\t";
+	def_5rev += "in1 = fma(M_COS_2PI_5F, v1, 0.0f);\\\n\tin2 = fma(M_COS_4PI_5F, v1, 0.0f);\\\n\tin3 = fma(M_COS_2PI_5, v2, 0.0f);\\\n\tin4 = fma(M_COS_4PI_5F, v2, 0.0f);\\\n\t";
+	def_5rev += "v1 = fft_sum(in1, in4);\\\n\tv2 = fft_sum(in2, in3);\\\n\tin1 = fma(M_SIN_2PI_5F, v3, 0.0f);\\\n\tin2 = fma(M_SIN_4PI_5F, v3, 0.0f);\\\n\t";
+	def_5rev += "in3 = fma(M_SIN_2PI_5F, v4, 0.0f);\\\n\tin4 = fma(M_SIN_4PI_5F, v4, 0.0f);\\\n\tv3 = fft_sum(in1, in4);\\\n\tv4 = fft_diff(in2, in3);\\\n\t";
+	def_5rev += "v5.x = fma(-1.0f, v4.y, 0.0f);\\\n\tv5.y = v4.x;\\\n\tv6.x = fma(-1.0f, v3.y, 0.0f);\\\n\tv6.y = v3.x;\\\n\tin1 = fft_sum(v0, v1);\\\n\t";
 	def_5rev += "in2 = fft_sum(v0, v2);\\\n\tv1 = in1;\\\n\tv2 = in2;\\\n\tin1 = fft_sum(v1, v6);\\\n\tin2 = fft_sum(v2, v5);\\\n\t";
 	def_5rev += "in3 = fft_diff(v2, v5);\\\n\tin4 = fft_diff(v1, v6);\\\n}\n";
 }

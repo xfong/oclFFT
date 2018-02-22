@@ -12,7 +12,7 @@ int main() {
 	srand(time(0));
 	oclFFTHeader printer;
 	std::string tmp;
-	uint32_t local_fft_len = 7;
+	uint32_t local_fft_len = 3;
 	uint32_t full_fft_len = 11 * local_fft_len;
 	printer.SetFFTLength(full_fft_len);
 	printer.SetKernelFFTLength(local_fft_len);
