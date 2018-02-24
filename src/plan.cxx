@@ -121,6 +121,7 @@ oclFFTStatus oclFFTPlan1D::Gen_Kernel() {
 			} else {
 				PlanKernel.SetInverseDirection(false);
 			}
+			return oclFFT_SUCCESS;
 		} else {
 			if (FFT_LEN < 0) {
 				return oclFFT_FAILED;

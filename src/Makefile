@@ -6,7 +6,7 @@ LDFLAGS=
 kernel_header.o: kernel_header.cxx kernel_header.h
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
-plan.o: plan.cxx plan.h
+plan.o: plan.cxx plan.h kernel_header.h
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 test_print.o: test_print.cxx
@@ -15,13 +15,11 @@ test_print.o: test_print.cxx
 main.o: main.cxx
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
-main: main.o plan.o
+main: main.o plan.o kernel_header.o
 	$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-	rm -f *.o
 
 test_print: test_print.o kernel_header.o
 	$(CXX) $(CFLAGS) -o $@ $^
-	rm -f *.o
 
 all: main test_print
 
@@ -30,4 +28,7 @@ all: main test_print
 
 clean:
 	rm -f *.o *~ *.exe
+
+objclean:
+	rm -f *.o *~
 
