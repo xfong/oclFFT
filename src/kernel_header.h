@@ -93,7 +93,7 @@ class oclFFTHeader {
 		std::string genKernelName(uint32_t nLen);
 		std::string print_kernel_input_vector_type(bool isfloat, uint32_t vlen, std::string vName);
 		std::string print_kernel_name(std::string kName);
-		std::string print_kernel_float2_inputs();
+		std::string print_kernel_float2_inputs(bool isfloat);
 		std::string print_kernel_initialization();
 		std::string print_kernel_outer_loop();
 		std::string GetSourceHeader();

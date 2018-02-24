@@ -16,6 +16,7 @@ oclFFTPlan1D::oclFFTPlan1D(uint32_t x) {
 	baked = false;
 	executing = false;
 	direction = oclFFT_FORWARD;
+	fft_precision = oclFFT_FLOAT;
 	Calc_Counts();
 }
 
@@ -107,12 +108,29 @@ oclFFTStatus oclFFTPlan1D::Set_Inverse() {
 	}
 }
 
-oclFFTStatus oclFFTPlan1D::Gen_Kernel() {
+oclFFTStatus oclFFTPlan1D::Set_Float() {
+	if (!executing) {
+		fft_precision = oclFFT_FLOAT;
+		return oclFFT_SUCCESS;
+	} else {
+		return oclFFT_PLAN_EXECUTING;
+	}
+}
+
+oclFFTStatus oclFFTPlan1D::Set_Double() {
+	if (!executing) {
+		fft_precision = oclFFT_DOUBLE;
+		return oclFFT_SUCCESS;
+	} else {
+		return oclFFT_PLAN_EXECUTING;
+	}
+}
+
+oclFFTStatus oclFFTPlan1D::Gen_Main_FFT_Kernel() {
 	if (!executing) {
 		if (FFT_LEN > 1) {
-			PlanKernel.SetFFTLength(FFT_BATCH * FFT_LEN / FFT_ChirpZ);
-			PlanKernel.SetKernelFFTLength(FFT_LEN / FFT_ChirpZ);
-			PlanKernel.SetInitKW(FFT_LEN);
+			PlanKernel.SetFFTLength(FFT_BATCH * FFT_LEN);
+			PlanKernel.SetBatchCount(FFT_BATCH * FFT_ChirpZ);
 			PlanKernel.SetIOFSScaleFactor(FFT_LEN);
 			PlanKernel.SetLocalGroupSize(LOCAL_GRP_SZ);
 			PlanKernel.SetGlobalGroupSize(LOCAL_GRP_SZ);
@@ -120,6 +138,39 @@ oclFFTStatus oclFFTPlan1D::Gen_Kernel() {
 				PlanKernel.SetInverseDirection(true);
 			} else {
 				PlanKernel.SetInverseDirection(false);
+			}
+			main_fft_kernel = PlanKernel.ReturnCommonMacros();
+			main_fft_kernel += PlanKernel.GetSourceHeader();
+			main_fft_kernel += PlanKernel.ReturnMacro();
+			bool first_kern = true;
+			for (uint8_t idx = 0; idx < 6; idx++) {
+				if (NCounts[idx] > 0) {
+					PlanKernel.SetKernelFFTLength(FFT_TYPES[idx]);
+					if (first_kern) {
+						PlanKernel.SetInitSCount(0);
+						PlanKernel.SetTwiddleSCount(0);
+					} else {
+						PlanKernel.SetInitSCount(1);
+					}
+					PlanKernel.SetOuterCount(NCounts[idx]);
+					PlanKernel.SetInnerCount(FFT_BATCH * FFT_LEN / FFT_TYPES[idx]);
+					PlanKernel.SetInitKW(Next_K_W[idx]);
+					PlanKernel.SetMatrixInverseSCount(NCounts[idx]+1);
+					PlanKernel.SetFinalMatrixInverseSCount(1);
+					kernel_names[idx] = PlanKernel.genKernelName(8);
+					first_kern = false;
+					main_fft_kernel.append(PlanKernel.print_kernel_name(kernel_names[idx]));
+					if (fft_precision == oclFFT_FLOAT) {
+						main_fft_kernel.append(PlanKernel.print_kernel_float2_inputs(true));
+					} else {
+						main_fft_kernel.append(PlanKernel.print_kernel_float2_inputs(false));
+					}
+					main_fft_kernel.append(" {\n");
+					main_fft_kernel.append(PlanKernel.print_kernel_initialization());
+					main_fft_kernel.append(PlanKernel.print_kernel_outer_loop());
+					main_fft_kernel.append("\n}\n\n");
+				} else {
+				}
 			}
 			return oclFFT_SUCCESS;
 		} else {

@@ -34,7 +34,7 @@ int main() {
 	tmp += printer.ReturnMacro();
 	std::string kern_name = printer.genKernelName(25);
 	tmp.append(printer.print_kernel_name(kern_name));
-	tmp.append(printer.print_kernel_float2_inputs());
+	tmp.append(printer.print_kernel_float2_inputs(true));
 	tmp.append(" {\n");
 	tmp.append(printer.print_kernel_initialization());
 	tmp.append(printer.print_kernel_outer_loop());

@@ -227,11 +227,11 @@ std::string oclFFTHeader::print_kernel_array_fetch(std::string arrName, std::str
 	return tmp;
 }
 
-std::string oclFFTHeader::print_kernel_float2_inputs() {
+std::string oclFFTHeader::print_kernel_float2_inputs(bool isfloat) {
 	std::string tmp = "(";
-	tmp.append(print_kernel_input_vector_type(true, 2, "dataIn"));
+	tmp.append(print_kernel_input_vector_type(isfloat, 2, "dataIn"));
 	tmp.append(", ");
-	tmp.append(print_kernel_input_vector_type(true, 2, "buffer"));
+	tmp.append(print_kernel_input_vector_type(isfloat, 2, "buffer"));
 	tmp.append(")");
 	return tmp;
 }
