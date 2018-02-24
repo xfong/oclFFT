@@ -3,7 +3,7 @@ CXX=g++
 CFLAGS=-Wall -I./ -std=c++11
 LDFLAGS=
 
-header.o: header.cxx header.h
+kernel_header.o: kernel_header.cxx kernel_header.h
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 plan.o: plan.cxx plan.h
@@ -19,7 +19,7 @@ main: main.o plan.o
 	$(CXX) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	rm -f *.o
 
-test_print: test_print.o header.o
+test_print: test_print.o kernel_header.o
 	$(CXX) $(CFLAGS) -o $@ $^
 	rm -f *.o
 

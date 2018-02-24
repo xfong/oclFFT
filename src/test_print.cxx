@@ -4,7 +4,7 @@
 #include <iostream>
 #include <ctime>
 
-#include "header.h"
+#include "kernel_header.h"
 
 #define LOCAL_GRP_SZ 256
 

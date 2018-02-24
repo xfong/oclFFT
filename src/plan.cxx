@@ -11,39 +11,58 @@ oclFFTPlan1D::oclFFTPlan1D(uint32_t x) {
 	FFT_BATCH = 1;
 	FFT_LEN = (int32_t)(x);
 	FFT_ChirpZ = -1;
+	baked = false;
+	executing = false;
 	Calc_Counts();
 }
 
-void oclFFTPlan1D::Calc_Counts() {
-	bool flag;
-	int32_t K_W = FFT_LEN;
-	for (int idx = 0; idx < 6; idx++) {
-		do {
-			flag = true;
-			uint32_t test = K_W % FFT_TYPES[idx];
-			if ((test == 0) && (K_W > 0)) {
-				K_W /= FFT_TYPES[idx];
-				NCounts[idx] += 1;
-			} else {
-				if (K_W <= 0) {
-					std::wcout << "Error!: K_W not a valid integer!" << std::endl;
+oclFFTStatus oclFFTPlan1D::Calc_Counts() {
+	if (!executing) {
+		bool flag;
+		int32_t K_W = FFT_LEN;
+		for (int idx = 0; idx < 6; idx++) {
+			do {
+				flag = true;
+				uint32_t test = K_W % FFT_TYPES[idx];
+				if ((test == 0) && (K_W > 0)) {
+					K_W /= FFT_TYPES[idx];
+					NCounts[idx] += 1;
 				} else {
-					Next_K_W[idx] = K_W;
+					if (K_W <= 0) {
+						std::wcout << "Error!: K_W not a valid integer!" << std::endl;
+					} else {
+						Next_K_W[idx] = K_W;
+					}
+					flag = false;
 				}
-				flag = false;
-			}
-		} while (flag);
+			} while (flag);
+		}
+		FFT_ChirpZ = K_W;
+		return oclFFT_SUCCESS;
+	} else {
+		return oclFFT_FAILED;
 	}
-	FFT_ChirpZ = K_W;
 }
 
-void oclFFTPlan1D::Set_KW(uint32_t K_W) {
-	FFT_LEN = K_W;
-	Calc_Counts();
+oclFFTStatus oclFFTPlan1D::Set_KW(uint32_t K_W) {
+	if (!executing) {
+		FFT_LEN = K_W;
+		baked = false;
+		Calc_Counts();
+		return oclFFT_SUCCESS;
+	} else {
+		return oclFFT_FAILED;
+	}
 }
 
-void oclFFTPlan1D::Set_Batch(uint32_t x) {
-	FFT_BATCH = x;
+oclFFTStatus oclFFTPlan1D::Set_Batch(uint32_t x) {
+	if (!executing) {
+		FFT_BATCH = x;
+		baked = false;
+		return oclFFT_SUCCESS;
+	} else {
+		return oclFFT_FAILED;
+	}
 }
 
 int32_t oclFFTPlan1D::Get_FFT_Type(int32_t idx) {

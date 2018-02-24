@@ -4,7 +4,7 @@
 #include <iostream>
 #include <ctime>
 
-#include "header.h"
+#include "kernel_header.h"
 
 oclFFTHeader::oclFFTHeader() {
 	def_2s = preprocess_ifndef + " M_SCALE_1_2F\n\t#define M_SCALE_1_2F 0.500000000000000000000000f\n" + preprocess_endif + "\n\n";
