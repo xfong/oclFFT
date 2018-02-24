@@ -7,12 +7,15 @@
 
 #include "plan.h"
 
+#define LOCAL_GRP_SZ 256
+
 oclFFTPlan1D::oclFFTPlan1D(uint32_t x) {
 	FFT_BATCH = 1;
 	FFT_LEN = (int32_t)(x);
 	FFT_ChirpZ = -1;
 	baked = false;
 	executing = false;
+	direction = oclFFT_FORWARD;
 	Calc_Counts();
 }
 
@@ -40,7 +43,7 @@ oclFFTStatus oclFFTPlan1D::Calc_Counts() {
 		FFT_ChirpZ = K_W;
 		return oclFFT_SUCCESS;
 	} else {
-		return oclFFT_FAILED;
+		return oclFFT_PLAN_EXECUTING;
 	}
 }
 
@@ -51,7 +54,7 @@ oclFFTStatus oclFFTPlan1D::Set_KW(uint32_t K_W) {
 		Calc_Counts();
 		return oclFFT_SUCCESS;
 	} else {
-		return oclFFT_FAILED;
+		return oclFFT_PLAN_EXECUTING;
 	}
 }
 
@@ -61,7 +64,7 @@ oclFFTStatus oclFFTPlan1D::Set_Batch(uint32_t x) {
 		baked = false;
 		return oclFFT_SUCCESS;
 	} else {
-		return oclFFT_FAILED;
+		return oclFFT_PLAN_EXECUTING;
 	}
 }
 
@@ -84,4 +87,48 @@ uint32_t oclFFTPlan1D::Get_Next_K_W(int32_t idx) {
 		return 0;
 	}
 	return Next_K_W[idx];
+}
+
+oclFFTStatus oclFFTPlan1D::Set_Forward() {
+	if (!executing) {
+		direction = oclFFT_FORWARD;
+		return oclFFT_SUCCESS;
+	} else {
+		return oclFFT_PLAN_EXECUTING;
+	}
+}
+
+oclFFTStatus oclFFTPlan1D::Set_Inverse() {
+	if (!executing) {
+		direction = oclFFT_INVERSE;
+		return oclFFT_SUCCESS;
+	} else {
+		return oclFFT_PLAN_EXECUTING;
+	}
+}
+
+oclFFTStatus oclFFTPlan1D::Gen_Kernel() {
+	if (!executing) {
+		if (FFT_LEN > 1) {
+			PlanKernel.SetFFTLength(FFT_BATCH * FFT_LEN / FFT_ChirpZ);
+			PlanKernel.SetKernelFFTLength(FFT_LEN / FFT_ChirpZ);
+			PlanKernel.SetInitKW(FFT_LEN);
+			PlanKernel.SetIOFSScaleFactor(FFT_LEN);
+			PlanKernel.SetLocalGroupSize(LOCAL_GRP_SZ);
+			PlanKernel.SetGlobalGroupSize(LOCAL_GRP_SZ);
+			if (direction == oclFFT_INVERSE) {
+				PlanKernel.SetInverseDirection(true);
+			} else {
+				PlanKernel.SetInverseDirection(false);
+			}
+		} else {
+			if (FFT_LEN < 0) {
+				return oclFFT_FAILED;
+			} else {
+				return oclFFT_SUCCESS;
+			}
+		}
+	} else {
+		return oclFFT_PLAN_EXECUTING;
+	}
 }
