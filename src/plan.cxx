@@ -143,20 +143,24 @@ oclFFTStatus oclFFTPlan1D::Gen_Main_FFT_Kernel() {
 			main_fft_kernel += PlanKernel.GetSourceHeader();
 			main_fft_kernel += PlanKernel.ReturnMacro();
 			bool first_kern = true;
+			PlanKernel.SetInitKW(FFT_LEN);
+			int32_t init_num = 0;
 			for (uint8_t idx = 0; idx < 6; idx++) {
 				if (NCounts[idx] > 0) {
 					PlanKernel.SetKernelFFTLength(FFT_TYPES[idx]);
 					if (first_kern) {
-						PlanKernel.SetInitSCount(0);
-						PlanKernel.SetTwiddleSCount(0);
+						init_num = 0;
+						PlanKernel.SetInitSCount(init_num);
+						PlanKernel.SetTwiddleSCount(init_num);
 					} else {
-						PlanKernel.SetInitSCount(1);
+						init_num = 1;
+						PlanKernel.SetInitSCount(init_num);
+						PlanKernel.SetTwiddleSCount(init_num - 1);
 					}
-					PlanKernel.SetOuterCount(NCounts[idx]);
+					PlanKernel.SetOuterCount(NCounts[idx] + init_num);
 					PlanKernel.SetInnerCount(FFT_BATCH * FFT_LEN / FFT_TYPES[idx]);
-					PlanKernel.SetInitKW(Next_K_W[idx]);
-					PlanKernel.SetMatrixInverseSCount(NCounts[idx]+1);
-					PlanKernel.SetFinalMatrixInverseSCount(1);
+					PlanKernel.SetMatrixInverseSCount(NCounts[idx] - 1 + init_num);
+					PlanKernel.SetFinalMatrixInverseSCount(NCounts[idx] + init_num);
 					kernel_names[idx] = PlanKernel.genKernelName(8);
 					first_kern = false;
 					main_fft_kernel.append(PlanKernel.print_kernel_name(kernel_names[idx]));
@@ -171,6 +175,7 @@ oclFFTStatus oclFFTPlan1D::Gen_Main_FFT_Kernel() {
 					main_fft_kernel.append("\n}\n\n");
 				} else {
 				}
+				PlanKernel.SetInitKW(Next_K_W[idx]);
 			}
 			return oclFFT_SUCCESS;
 		} else {

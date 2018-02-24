@@ -645,7 +645,8 @@ void oclFFTHeader::GenFFT8Macros() {
 }
 
 void oclFFTHeader::initKernelNameGenerator() {
-	srand(time(0));
+	srand(time(NULL));
+	nameGenInit = true;
 }
 
 std::string oclFFTHeader::genKernelName(uint32_t nLen) {

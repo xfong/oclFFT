@@ -9,7 +9,7 @@
 #define LOCAL_GRP_SZ 256
 
 int main() {
-	srand(time(0));
+	srand(time(NULL));
 	oclFFTHeader printer;
 	std::string tmp;
 	uint32_t local_fft_len = 3;

@@ -7,7 +7,7 @@
 using namespace std;
 
 int main() {
-	int32_t testInput = 68;
+	int32_t testInput = 80;
 	oclFFTPlan1D plan1 (testInput);
 	wcout << "When performing FFT of length " << plan1.Get_Len() << ", the library will perform:" << endl;
 	for (int idx = 0; idx < 6; idx++) {
@@ -21,4 +21,12 @@ int main() {
 		test = plan2.Get_Chirp_Len();
 		wcout << "Chirp Z new length: " << plan2.Get_Len() << "; Chirp Z of new plan: " << test << endl;
 	}
+	wcout << "\nPrinting kernel string...\n" << endl;
+	plan1.Gen_Main_FFT_Kernel();
+	string	tmpString = plan1.Get_Main_FFT_Kernel();
+	char * cstr_ = new char [tmpString.length()+1];
+	strcpy(cstr_, tmpString.c_str());
+	wcout << cstr_ << endl;
+	delete [] cstr_;
+	return 0;
 }
