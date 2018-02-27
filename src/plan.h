@@ -59,5 +59,6 @@ class oclFFTPlan1D {
 		oclFFT_PRECISION Get_Precision() { return fft_precision; };
 		std::string Get_Main_FFT_Kernel() { return main_fft_kernel; };
 		std::string Get_ChirpZ_Kernel() { return chirpz_kernel; };
+		oclFFTStatus DiscoverChirpZ(int32_t *val);
 };
 

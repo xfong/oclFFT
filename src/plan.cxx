@@ -126,6 +126,34 @@ oclFFTStatus oclFFTPlan1D::Set_Double() {
 	}
 }
 
+oclFFTStatus oclFFTPlan1D::DiscoverChirpZ(int32_t *outVal) {
+	*outVal = -1;
+	if (!executing) {
+		if (FFT_ChirpZ < 1) {
+			return oclFFT_FAILED;
+		} else if (FFT_ChirpZ == 1) {
+			*outVal = 1;
+			return oclFFT_SUCCESS;
+		} else {
+			bool flag = true;
+			int32_t ChirpLength = FFT_ChirpZ + 1;
+			do {
+				oclFFTPlan1D tmpPlan(2*ChirpLength);
+				int32_t	testValue = tmpPlan.Get_Chirp_Len();
+				if (testValue == 1) {
+					*outVal = 2 * ChirpLength;
+					flag = false;
+				} else {
+					ChirpLength++;
+				}
+			} while (flag);
+			return oclFFT_SUCCESS;
+		}
+	} else {
+		return oclFFT_PLAN_EXECUTING;
+	}
+}
+
 oclFFTStatus oclFFTPlan1D::Gen_Main_FFT_Kernel() {
 	if (!executing) {
 		if (FFT_LEN > 1) {
