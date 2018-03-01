@@ -1,10 +1,3 @@
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cstdint>
-#include <iostream>
-
 #include "plan.h"
 
 #define LOCAL_GRP_SZ 256

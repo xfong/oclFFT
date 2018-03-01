@@ -1,11 +1,9 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
-#include <cstdint>
 
 #include "kernel_header.h"
-#include "CL/cl.h"
+#include <CL/opencl.h>
 
 enum oclFFTStatus : uint8_t {
 	oclFFT_SUCCESS					=			0,

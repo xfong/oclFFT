@@ -1,9 +1,3 @@
-#include <cstring>
-#include <string>
-#include <cstdint>
-#include <iostream>
-#include <ctime>
-
 #include "kernel_header.h"
 
 oclFFTHeader::oclFFTHeader() {
