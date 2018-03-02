@@ -12,6 +12,9 @@ plan.o: plan.cxx plan.h kernel_header.h
 test_print.o: test_print.cxx
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
+test_compile.o: test_compile.cxx
+	$(CXX) $(CFLAGS) -c -o $@ $<
+
 main.o: main.cxx
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
@@ -21,7 +24,10 @@ main: main.o plan.o kernel_header.o
 test_print: test_print.o kernel_header.o
 	$(CXX) $(CFLAGS) -o $@ $^
 
-all: main test_print
+test_compile: test_compile.o plan.o kernel_header.o
+	$(CXX) $(CFLAGS) -o $@ $^ -lOpenCL
+
+all: main test_print test_compile
 
 
 .PHONY: clean

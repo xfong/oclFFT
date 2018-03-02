@@ -3,7 +3,12 @@
 #include <cstdlib>
 
 #include "kernel_header.h"
-#include <CL/opencl.h>
+
+#ifdef __APPLE__
+#include <OpenCL/opencl.h>
+#else
+#include <CL/cl.h>
+#endif
 
 enum oclFFTStatus : uint8_t {
 	oclFFT_SUCCESS					=			0,
