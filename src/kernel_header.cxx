@@ -670,4 +670,5 @@ std::string oclFFTHeader::PackReal2ComplexKernel(bool isfloat) {
 	tmp += inType + " a = dataIn[gid];\n\t\t";
 	tmp += inType + "2 b = (" + inType + "2) {a, 0.0};\n\t\t";
 	tmp += "dataOut[gid] = b;\n\t}\n}\n";
+	return tmp;
 }
