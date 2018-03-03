@@ -655,3 +655,19 @@ std::string oclFFTHeader::genKernelName(uint32_t nLen) {
 	}
 	return tmp;
 }
+
+std::string oclFFTHeader::PackReal2ComplexKernel(bool isfloat) {
+	std::string tmp = "__kernel void packReal2Complex(";
+	std::string inType = "";
+	if (isfloat) {
+		inType += "float";
+	} else {
+		inType += "double";
+	}
+	tmp += "__global " + inType + "* dataIn, __global " + inType + "2* dataOut, int count) {\n\t";
+	tmp += "int gid = get_global_id(0);\n\t";
+	tmp += "if (gid < count) {\n\t\t";
+	tmp += inType + " a = dataIn[gid];\n\t\t";
+	tmp += inType + "2 b = (" + inType + "2) {a, 0.0};\n\t\t";
+	tmp += "dataOut[gid] = b;\n\t}\n}\n";
+}

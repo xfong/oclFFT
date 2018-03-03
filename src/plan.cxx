@@ -10,6 +10,7 @@ oclFFTPlan1D::oclFFTPlan1D(uint32_t x) {
 	executing = false;
 	direction = oclFFT_FORWARD;
 	fft_precision = oclFFT_FLOAT;
+	layout = oclFFT_C2C;
 	Calc_Counts();
 }
 
@@ -209,4 +210,10 @@ oclFFTStatus oclFFTPlan1D::Gen_Main_FFT_Kernel() {
 	} else {
 		return oclFFT_PLAN_EXECUTING;
 	}
+}
+
+cl_int CopyComplex2Hermitian(size_t inLength, cl_mem iBuf, cl_mem oBuf, cl_command_queue queue, cl_uint EventWaitListSize, cl_event *EventWaitList, cl_event *retEvent) {
+	size_t copyLength = (inLength / 2) + 1;
+	cl_int ret = clEnqueueCopyBuffer(queue, iBuf, oBuf, 0, 0, copyLength, EventWaitListSize, EventWaitList, retEvent);
+	return ret;
 }

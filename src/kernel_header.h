@@ -99,6 +99,7 @@ class oclFFTHeader {
 		std::string GetSourceHeader();
 		std::string ReturnCommonMacros();
 		std::string ReturnMacro();
+		std::string PackReal2ComplexKernel(bool isfloat);
 
 		void SetIOFSScaleFactor(uint32_t x) { iofs_scaleFac = x; };
 		void SetGlobalGroupSize(uint32_t x) { global_grp_size = x; };
