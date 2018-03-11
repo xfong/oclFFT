@@ -59,3 +59,19 @@ func (s *oclFFTPlanBase) GetNumberOfKernels() int {
 func (s *oclFFTPlanBase) GetNumberOfPrograms() int {
 	return len(s.programs)
 }
+
+func (s *oclFFTPlanBase) CheckBlocked() bool {
+	return s.Blocked
+}
+
+func (s *oclFFTPlanBase) destroy() {
+	for _, vv := range s.buffers {
+		vv.Release()
+	}
+	for _, vv := range s.kernels {
+		vv.Release()
+	}
+	for _, vv := range s.programs {
+		vv.Release()
+	}
+}
