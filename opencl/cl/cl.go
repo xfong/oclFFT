@@ -1,16 +1,43 @@
-package oclFFT
+/*
+Package cl provides a binding to the OpenCL api. It's mostly a low-level
+wrapper that avoids adding functionality while still making the interface
+a little more friendly and easy to use.
 
-#include "opencl.h"
+Resource life-cycle management:
 
+For any CL object that gets created (buffer, queue, kernel, etc..) you should
+call object.Release() when finished with it to free the CL resources. This
+explicitely calls the related clXXXRelease method for the type. However,
+as a fallback there is a finalizer set for every resource item that takes
+care of it (eventually) if Release isn't called. In this way you can have
+better control over the life cycle of resources while having a fall back
+to avoid leaks. This is similar to how file handles and such are handled
+in the Go standard packages.
+*/
+package cl
+
+/*
+#include "./opencl.h"
+*/
 import "C"
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 )
+
+var ErrUnsupported = errors.New("cl: unsupported")
 
 var (
 	ErrUnknown = errors.New("cl: unknown error") // Generally an unexpected result from an OpenCL function (e.g. CL_SUCCESS but null pointer)
 )
+
+type ErrOther int
+
+func (e ErrOther) Error() string {
+	return fmt.Sprintf("cl: error %d", int(e))
+}
 
 var (
 	ErrDeviceNotFound                     = errors.New("cl: Device Not Found")
@@ -132,19 +159,78 @@ func toError(code C.cl_int) error {
 	if err, ok := errorMap[code]; ok {
 		return err
 	}
-	return ErrUnknown
+	return ErrOther(code)
 }
 
-type OCLFFTStack struct {
-	list		[]*planAbs;
-}
+type ExecCapability int
 
-func DestroyPlan(uint idx) error {
-	targPlan := *list[uint]
-	ret := toError(targPlan.destroy())
-	if ret == nil {
-		list[uint] = nil
+const (
+	ExecCapabilityKernel       ExecCapability = C.CL_EXEC_KERNEL        // The OpenCL device can execute OpenCL kernels.
+	ExecCapabilityNativeKernel ExecCapability = C.CL_EXEC_NATIVE_KERNEL // The OpenCL device can execute native kernels.
+)
+
+func (ec ExecCapability) String() string {
+	var parts []string
+	if ec&ExecCapabilityKernel != 0 {
+		parts = append(parts, "Kernel")
 	}
-	return ret
+	if ec&ExecCapabilityNativeKernel != 0 {
+		parts = append(parts, "NativeKernel")
+	}
+	if parts == nil {
+		return ""
+	}
+	return strings.Join(parts, "|")
 }
 
+type CommandExecStatus int
+
+const (
+	CommandExecStatusComplete  CommandExecStatus = C.CL_COMPLETE
+	CommandExecStatusRunning   CommandExecStatus = C.CL_RUNNING
+	CommandExecStatusSubmitted CommandExecStatus = C.CL_SUBMITTED
+	CommandExecStatusQueued    CommandExecStatus = C.CL_QUEUED
+)
+
+type CommandType int
+
+const (
+	CommandNDRangeKernel     CommandType = C.CL_COMMAND_NDRANGE_KERNEL
+	CommandTask              CommandType = C.CL_COMMAND_TASK
+	CommandNativeKernel      CommandType = C.CL_COMMAND_NATIVE_KERNEL
+	CommandReadBuffer        CommandType = C.CL_COMMAND_READ_BUFFER
+	CommandWriteBuffer       CommandType = C.CL_COMMAND_WRITE_BUFFER
+	CommandCopyBuffer        CommandType = C.CL_COMMAND_COPY_BUFFER
+	CommandReadImage         CommandType = C.CL_COMMAND_READ_IMAGE
+	CommandWriteImage        CommandType = C.CL_COMMAND_WRITE_IMAGE
+	CommandCopyImage         CommandType = C.CL_COMMAND_COPY_IMAGE
+	CommandCopyBufferToImage CommandType = C.CL_COMMAND_COPY_BUFFER_TO_IMAGE
+	CommandCopyImageToBuffer CommandType = C.CL_COMMAND_COPY_IMAGE_TO_BUFFER
+	CommandMapBuffer         CommandType = C.CL_COMMAND_MAP_BUFFER
+	CommandMapImage          CommandType = C.CL_COMMAND_MAP_IMAGE
+	CommandUnmapMemObject    CommandType = C.CL_COMMAND_UNMAP_MEM_OBJECT
+	CommandMarker            CommandType = C.CL_COMMAND_MARKER
+)
+
+func clBool(b bool) C.cl_bool {
+	if b {
+		return C.CL_TRUE
+	}
+	return C.CL_FALSE
+}
+
+func sizeT3(i3 [3]int) [3]C.size_t {
+	var val [3]C.size_t
+	val[0] = C.size_t(i3[0])
+	val[1] = C.size_t(i3[1])
+	val[2] = C.size_t(i3[2])
+	return val
+}
+
+type CLUint C.cl_uint
+
+type Dim3 struct {
+	X int
+	Y int
+	Z int
+}

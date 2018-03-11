@@ -5,8 +5,6 @@ package oclFFT
 //	"strings"
 //)
 
-var	FFTKernels	= [...]int {8, 7, 5, 4, 3, 2}
-
 func countStages(x int) ([6]int, [7]int) {
 	tmpCnt := [6]int {-1, -1, -1, -1, -1, -1}
 	initKW := [7]int {1, 1, 1, 1, 1, 1, 1}
