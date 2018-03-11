@@ -47,3 +47,15 @@ func (s *oclFFTPlanBase) GetEntryKW() [7]int {
 func (s *oclFFTPlanBase) GetStageCounts() [6]int {
 	return s.StageCounts
 }
+
+func (s *oclFFTPlanBase) GetNumberOfBuffers() int {
+	return len(s.buffers)
+}
+
+func (s *oclFFTPlanBase) GetNumberOfKernels() int {
+	return len(s.kernels)
+}
+
+func (s *oclFFTPlanBase) GetNumberOfPrograms() int {
+	return len(s.programs)
+}
