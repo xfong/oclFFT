@@ -12,12 +12,6 @@ var (
 	ErrUnknown = errors.New("cl: unknown error") // Generally an unexpected result from an OpenCL function (e.g. CL_SUCCESS but null pointer)
 )
 
-type ErrOther int
-
-func (e ErrOther) Error() string {
-	return fmt.Sprintf("cl: error %d", int(e))
-}
-
 var (
 	ErrDeviceNotFound                     = errors.New("cl: Device Not Found")
 	ErrDeviceNotAvailable                 = errors.New("cl: Device Not Available")
@@ -134,21 +128,11 @@ var errorMap = map[C.cl_int]error{
 	C.CL_LINKER_NOT_AVAILABLE:            ErrLinkerNotAvailable,
 }
 
-func toError(code interface{}) error {
-	switch codeT := code.(type) {
-	default:
-		return ErrUnknown
-	case C.cl_int:
-		if err, ok := errorMap[codeT]; ok {
-			return err
-		}
-		return ErrOther(codeT)
-	case C.clfftStatus:
-		if err, ok := errorMapFFT[codeT]; ok {
-			return err
-		}
-		return ErrOtherFFT(codeT)
+func toError(code C.cl_int) error {
+	if err, ok := errorMap[code]; ok {
+		return err
 	}
+	return ErrUnknown
 }
 
 type OCLFFTStack struct {
